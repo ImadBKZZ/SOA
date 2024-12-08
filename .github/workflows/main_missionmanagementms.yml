@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy JAR app to Azure Web App - MissionManagementMS
 
 on:
@@ -22,30 +19,47 @@ jobs:
           java-version: '17'
           distribution: 'microsoft'
 
-      - name: Build with Maven
+      # Build the RequestManagementService microservice
+      - name: Build RequestManagementService with Maven
         run: mvn clean install -f ./RequestManagementService/pom.xml
 
-      - name: Upload artifact for deployment job
+      # Build the ConfigServer microservice
+      - name: Build ConfigServer with Maven
+        run: mvn clean install -f ./ConfigServer/pom.xml
+
+      # Upload the artifacts for the deployment job
+      - name: Upload artifact for RequestManagementService
         uses: actions/upload-artifact@v4
         with:
-          name: java-app
+          name: java-app-request-management
           path: 'RequestManagementService/target/*.jar'
+
+      - name: Upload artifact for ConfigServer
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-app-config-server
+          path: 'ConfigServer/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: ${{ steps.deploy-to-webapp-request-management.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-  
+      id-token: write # This is required for requesting the JWT
+
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact for RequestManagementService
         uses: actions/download-artifact@v4
         with:
-          name: java-app
-      
+          name: java-app-request-management
+
+      - name: Download artifact for ConfigServer
+        uses: actions/download-artifact@v4
+        with:
+          name: java-app-config-server
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -53,11 +67,20 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8525CE1FEB774272A72F49740FECBDC5 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_0F6D6F1D628E41A9954050EFC4C8CA5B }}
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      # Deploy RequestManagementService to Azure Web App
+      - name: Deploy RequestManagementService to Azure Web App
+        id: deploy-to-webapp-request-management
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'MissionManagementMS'
           slot-name: 'Production'
-          package: '*.jar'
-          
+          package: 'RequestManagementService/target/*.jar'
+
+      # Deploy ConfigServer to Azure Web App
+      - name: Deploy ConfigServer to Azure Web App
+        id: deploy-to-webapp-config-server
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'MissionManagementMS-ConfigServer'  # Assurez-vous que l'application Azure est créée pour ce service
+          slot-name: 'Production'
+          package: 'ConfigServer/target/*.jar'
