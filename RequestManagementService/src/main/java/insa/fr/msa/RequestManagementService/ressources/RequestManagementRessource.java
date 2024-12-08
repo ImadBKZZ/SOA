@@ -171,4 +171,9 @@ public class RequestManagementRessource {
 		}
 		return filtered;
 	}
+
+	@GetMapping("/testazure")
+	public String testAzure(){
+		return "Reussi";
+	}
 }
