@@ -6,13 +6,23 @@ public class Request {
 	private int idHelper;
 	private String RqStatus;
 	private String Description;
+	private String AdminResponse;
 	
-	public Request(int idRequest,int idNeedy,int idHelper,String RqStatus,String Description) {
+	public String getAdminResponse() {
+		return AdminResponse;
+	}
+
+	public void setAdminResponse(String adminResponse) {
+		AdminResponse = adminResponse;
+	}
+
+	public Request(int idRequest,int idNeedy,int idHelper,String RqStatus,String Description,String AdminResponse) {
 		this.idRequest = idRequest;
 		this.idNeedy = idNeedy;
 		this.idHelper = idHelper;
 		this.RqStatus = RqStatus;
 		this.Description = Description;
+		this.AdminResponse = AdminResponse;
 	}
 
 	public Request(int idNeedy,int idHelper,String RqStatus,String Description) {

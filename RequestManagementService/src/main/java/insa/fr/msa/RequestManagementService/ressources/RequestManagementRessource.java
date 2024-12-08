@@ -57,7 +57,7 @@ public class RequestManagementRessource {
 		Statement stm = db.createStatement();
 		ResultSet rs = stm.executeQuery(query);
 		while(rs.next()) {
-			requestList.add(new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5)));
+			requestList.add(new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5),rs.getString(6)));
 		}
 		return requestList;
 	}
@@ -69,13 +69,13 @@ public class RequestManagementRessource {
 		Statement stm = db.createStatement();
 		ResultSet rs = stm.executeQuery(query);
 		if(rs.next()) {
-			Request requete = new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5));
+			Request requete = new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5),rs.getString(6));
 			return requete;
 		}
 		return null;
 	}
 	
-	@PutMapping("/request/{id}/{status}")
+	@PutMapping("/requests/{id}/{status}")
 	public String changeRequestStatus(@PathVariable("id") int id , @PathVariable("status") String status) throws SQLException {
 	
 		String query = "UPDATE requete SET status = " + status + " WHERE id = " + id;
@@ -87,7 +87,7 @@ public class RequestManagementRessource {
 	}
 	
 	
-	@PutMapping("/acceptRequest/{idHelper}/{rqId}")
+	@PutMapping("/requests/acceptRequest/{idHelper}/{rqId}")
 	public String  acceptRequest(@PathVariable("idHelper") int idHelper , @PathVariable("rqId") int rqId) throws SQLException {
 		Connection db = Connect();
 		String query = "UPDATE requete SET volontaire = " + idHelper  + " WHERE id = " + rqId;
@@ -97,20 +97,44 @@ public class RequestManagementRessource {
 		return "Request Accepted";
 	}
 	
-	@PostMapping("/addRequest")
+	
+	@PutMapping("/requests/admin/validate/{idrq}")
+	public String ValidateRequest(@PathVariable("idrq") int idrq) throws SQLException {
+		Connection db = Connect();
+		String query = "UPDATE requete SET AdminResponse = 'ACCEPTED' WHERE id = " + idrq;
+		Statement stm = db.createStatement();
+		stm.executeUpdate(query);
+		
+		return "Requete Valider";
+	}
+	
+	@PostMapping("/requests/addRequest")
 	public String addRequest(@RequestBody Request newRequest) throws SQLException {
-		String query ="INSERT INTO requete(patient,status,description) VALUES (?,?,?)";
+		String query ="INSERT INTO requete(patient,status,description,AdminResponse) VALUES (?,?,?,?)";
 		Connection db = Connect();
 		PreparedStatement pstm = db.prepareStatement(query);
 		pstm.setInt(1, newRequest.getIdNeedy());
 		pstm.setString(2, "WAITING FOR HELPER");
 		pstm.setString(3, newRequest.getDescription());
-		
+		pstm.setString(4, "WAITING FOR APPROVAL");
 		pstm.executeUpdate();
 		
 		return "Added" + newRequest.ToString();
 	}
-	
+
+	@PostMapping("/requests/addMission")
+	public String addMission(@RequestBody Request newRequest) throws SQLException {
+		String query ="INSERT INTO requete(volontaire,status,description,AdminResponse) VALUES (?,?,?,?)";
+		Connection db = Connect();
+		PreparedStatement pstm = db.prepareStatement(query);
+		pstm.setInt(1, newRequest.getIdHelper());
+		pstm.setString(2, "LOOKING FOR NEEDY");
+		pstm.setString(3, newRequest.getDescription());
+		pstm.setString(4, "WAITING FOR APPROVAL");
+		pstm.executeUpdate();
+		
+		return "Added" + newRequest.ToString();
+	}
 	@DeleteMapping("/delRequest/{id}")
 	public String delRequest(@PathVariable("id") int id) throws SQLException {
 		String query = "DELETE FROM requete WHERE id = " + id;
@@ -128,7 +152,7 @@ public class RequestManagementRessource {
 		Statement stm = db.createStatement();
 		ResultSet rs = stm.executeQuery(query);
 		while(rs.next()) {
-			listRequest.add(new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5)));
+			listRequest.add(new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5),rs.getString(6)));
 		}
 		return listRequest;
 	}
@@ -136,7 +160,7 @@ public class RequestManagementRessource {
 	@PutMapping("/refuseRequest/{idRq}")
 	public String refuseRequest(@PathVariable("idRq") int idRq, @RequestParam("commentaire") String commentaire) throws SQLException {
 	    System.out.println(commentaire);
-	    String query = "UPDATE requete SET description = ? WHERE id = ?";
+	    String query = "UPDATE requete SET AdminResponse = ? WHERE id = ?";
 	    
 	    try (Connection db = Connect(); 
 	         PreparedStatement stmt = db.prepareStatement(query)) {
@@ -157,4 +181,17 @@ public class RequestManagementRessource {
 	    }
 	}
 
+	@GetMapping("/requests/filter")
+	public List<Request> filterRequestByStatus(@RequestParam("filters") String filters) throws SQLException{
+		List<Request> filtered = new ArrayList<Request>();
+		System.out.println(filters);
+		String query = "SELECT * FROM requete WHERE status = " + "'" + filters + "'";
+		Connection db = Connect();
+		Statement stm = db.createStatement();
+		ResultSet rs = stm.executeQuery(query);
+		while(rs.next()) {
+			filtered.add(new Request(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getString(4),rs.getString(5),rs.getString(6)));
+		}
+		return filtered;
+	}
 }
