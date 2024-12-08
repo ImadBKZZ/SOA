@@ -19,33 +19,10 @@ import java.util.List;
 @RestController
 public class RequestManagementRessource {
 
-	@Value("${db.connection}")
-	private String dbConnection;
-	
-	@Value("${db.host}")
-	private String dbHost;
-	
-	@Value("${db.port}")
-	private String dbPort;
-	
-	@Value("${server.port}")
-	private String ServerPort;
-	
-	@Value("${db.uri}")
-	private String dbUri;
-	
-	@Value("${db.name}")
-	private String dbName;
-	
-	@Value("${db.login}")
-	private String dbLogin;
-	
-	@Value("${db.pwd}")
-	private String dbPwd;
 	
 	public Connection Connect() throws SQLException {
         // Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection conn = DriverManager.getConnection(dbUri, dbLogin, dbPwd);
+        Connection conn = DriverManager.getConnection("jdbc:mysql://srv-bdens.insa-toulouse.fr:3306/projet_gei_060", "projet_gei_060", "Yoor8Xei");
         return conn;   
     }
 	
